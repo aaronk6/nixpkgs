@@ -32,6 +32,36 @@
           hostPath = "/tmp/test-bind-mounts/no-spaces";
           isReadOnly = true;
         };
+        # Test emoji
+        "/mnt/emoji" = {
+          hostPath = "/tmp/test-bind-mounts/path-with-😈-emoji";
+          isReadOnly = true;
+        };
+        # Test double quote
+        "/mnt/double-quote" = {
+          hostPath = "/tmp/test-bind-mounts/path-with-\"-quote";
+          isReadOnly = true;
+        };
+        # Test single quote
+        "/mnt/single-quote" = {
+          hostPath = "/tmp/test-bind-mounts/path-with-'-quote";
+          isReadOnly = true;
+        };
+        # Test backslash
+        "/mnt/backslash" = {
+          hostPath = "/tmp/test-bind-mounts/path-with-\\-backslash";
+          isReadOnly = true;
+        };
+        # Test leading dash
+        "/mnt/leading-dash" = {
+          hostPath = "/tmp/test-bind-mounts/-leading-dash";
+          isReadOnly = true;
+        };
+        # Test multiple special chars combined
+        "/mnt/mixed-special" = {
+          hostPath = "/tmp/test-bind-mounts/path with '\"special\" chars'";
+          isReadOnly = true;
+        };
       };
       config = { };
     };
@@ -43,12 +73,24 @@
       mkdir -p "/tmp/test-bind-mounts/ leading-space"
       mkdir -p "/tmp/test-bind-mounts/trailing-space "
       mkdir -p "/tmp/test-bind-mounts/no-spaces"
+      mkdir -p "/tmp/test-bind-mounts/path-with-😈-emoji"
+      mkdir -p "/tmp/test-bind-mounts/path-with-\"-quote"
+      mkdir -p "/tmp/test-bind-mounts/path-with-'-quote"
+      mkdir -p "/tmp/test-bind-mounts/path-with-\\-backslash"
+      mkdir -p "/tmp/test-bind-mounts/-leading-dash"
+      mkdir -p "/tmp/test-bind-mounts/path with '\"special\" chars'"
 
       echo "single-space" > "/tmp/test-bind-mounts/path with spaces/test.txt"
       echo "double-space" > "/tmp/test-bind-mounts/path  with  double/test.txt"
       echo "leading-space" > "/tmp/test-bind-mounts/ leading-space/test.txt"
       echo "trailing-space" > "/tmp/test-bind-mounts/trailing-space /test.txt"
       echo "no-spaces" > "/tmp/test-bind-mounts/no-spaces/test.txt"
+      echo "emoji" > "/tmp/test-bind-mounts/path-with-😈-emoji/test.txt"
+      echo "double-quote" > "/tmp/test-bind-mounts/path-with-\"-quote/test.txt"
+      echo "single-quote" > "/tmp/test-bind-mounts/path-with-'-quote/test.txt"
+      echo "backslash" > "/tmp/test-bind-mounts/path-with-\\-backslash/test.txt"
+      echo "leading-dash" > "/tmp/test-bind-mounts/-leading-dash/test.txt"
+      echo "mixed-special" > "/tmp/test-bind-mounts/path with '\"special\" chars'/test.txt"
     '';
   };
 
@@ -86,10 +128,36 @@
         output = machine.succeed("nixos-container run test-special-paths -- cat /mnt/no-spaces/test.txt")
         assert "no-spaces" in output, f"Expected 'no-spaces', got: {output}"
 
+        # Test emoji
+        output = machine.succeed("nixos-container run test-special-paths -- cat /mnt/emoji/test.txt")
+        assert "emoji" in output, f"Expected 'emoji', got: {output}"
+
+        # Test double quote
+        output = machine.succeed("nixos-container run test-special-paths -- cat /mnt/double-quote/test.txt")
+        assert "double-quote" in output, f"Expected 'double-quote', got: {output}"
+
+        # Test single quote
+        output = machine.succeed("nixos-container run test-special-paths -- cat /mnt/single-quote/test.txt")
+        assert "single-quote" in output, f"Expected 'single-quote', got: {output}"
+
+        # Test backslash
+        output = machine.succeed("nixos-container run test-special-paths -- cat /mnt/backslash/test.txt")
+        assert "backslash" in output, f"Expected 'backslash', got: {output}"
+
+        # Test leading dash
+        output = machine.succeed("nixos-container run test-special-paths -- cat /mnt/leading-dash/test.txt")
+        assert "leading-dash" in output, f"Expected 'leading-dash', got: {output}"
+
+        # Test mixed special characters
+        output = machine.succeed("nixos-container run test-special-paths -- cat /mnt/mixed-special/test.txt")
+        assert "mixed-special" in output, f"Expected 'mixed-special', got: {output}"
+
     with subtest("Verify bind mounts are read-only"):
         # Attempting to write should fail
         machine.fail("nixos-container run test-special-paths -- touch /mnt/single-space/write-test.txt")
         machine.fail("nixos-container run test-special-paths -- touch /mnt/double-space/write-test.txt")
+        machine.fail("nixos-container run test-special-paths -- touch /mnt/emoji/write-test.txt")
+        machine.fail("nixos-container run test-special-paths -- touch /mnt/mixed-special/write-test.txt")
 
     with subtest("Verify mount information is correct"):
         # Check that mounts show the correct source paths with spaces
@@ -98,5 +166,11 @@
 
         mounts = machine.succeed("nixos-container run test-special-paths -- findmnt /mnt/double-space")
         assert "path  with  double" in mounts, f"Expected 'path  with  double' in mount info: {mounts}"
+
+        mounts = machine.succeed("nixos-container run test-special-paths -- findmnt /mnt/emoji")
+        assert "path-with-😈-emoji" in mounts, f"Expected 'path-with-😈-emoji' in mount info: {mounts}"
+
+        mounts = machine.succeed("nixos-container run test-special-paths -- findmnt /mnt/mixed-special")
+        assert "path \\\"with\\\" 'quotes'" in mounts or "path" in mounts, f"Expected special chars in mount info: {mounts}"
   '';
 }
