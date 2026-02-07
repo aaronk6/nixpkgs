@@ -6,6 +6,7 @@
   nodes.machine = {
     containers.test-special-paths = {
       autoStart = true;
+      timeoutStartSec = "5min";
       bindMounts = {
         # Test single space
         "/mnt/single-space" = {
