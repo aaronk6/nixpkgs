@@ -403,6 +403,7 @@ in
   containers-portforward = runTest ./containers-portforward.nix;
   containers-reloadable = runTest ./containers-reloadable.nix;
   containers-require-bind-mounts = runTest ./containers-require-bind-mounts.nix;
+  containers-bind-mounts-special-paths = runTest ./containers-bind-mounts-special-paths.nix;
   containers-restart_networking = runTest ./containers-restart_networking.nix;
   containers-tmpfs = runTest ./containers-tmpfs.nix;
   containers-unified-hierarchy = runTest ./containers-unified-hierarchy.nix;
